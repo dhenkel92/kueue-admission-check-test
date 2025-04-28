@@ -20,7 +20,6 @@ spec:
   admissionChecksStrategy:
     admissionChecks:
       - name: retry-check
-        onFlavors: [default-rf]
   resourceGroups:
     - coveredResources: ["cpu", "memory"]
       flavors:

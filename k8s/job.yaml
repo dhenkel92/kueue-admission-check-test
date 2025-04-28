@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  name: daniel
+  labels:
+    kueue.x-k8s.io/queue-name: retry-check-demo
+spec:
+  parallelism: 1
+  completions: 1
+  suspend: true
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      containers:
+        - image: nginx:1.20
+          name: daniel
+          resources: {}
+      restartPolicy: Never

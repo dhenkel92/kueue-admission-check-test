@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -34,6 +35,13 @@ func (ctrl *RetryAdmissionCheck) Reconcile(ctx context.Context, request reconcil
 		if apierrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
+		return reconcile.Result{}, err
+	}
+
+	if workload.HasQuotaReservation(&wl) && workload.IsEvicted(&wl) && workload.IsActive(&wl) {
+		workload.SetRequeuedCondition(&wl, kueuev1beta1.WorkloadEvictedByAdmissionCheck, "isso", true)
+		_ = workload.UnsetQuotaReservationWithCondition(&wl, string(kueuev1beta1.CheckStatePending), "daniel.test", time.Now())
+		err := workload.ApplyAdmissionStatus(ctx, ctrl.client, &wl, true, clock.RealClock{})
 		return reconcile.Result{}, err
 	}
 

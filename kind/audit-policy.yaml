@@ -1,0 +1,10 @@
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # Log pod changes at RequestResponse level
+  - level: RequestResponse
+    resources:
+      - group: "kueue.x-k8s.io"
+        # Resource "pods" doesn't match requests to any subresource of pods,
+        # which is consistent with the RBAC policy.
+        resources: ["workloads", "workloads/status"]

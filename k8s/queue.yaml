@@ -1,0 +1,39 @@
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: default-rf
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: AdmissionCheck
+metadata:
+  name: retry-check
+spec:
+  controllerName: retry-check
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: retry-check-demo
+spec:
+  namespaceSelector: {} # match all.
+  admissionChecksStrategy:
+    admissionChecks:
+      - name: retry-check
+        onFlavors: [default-rf]
+  resourceGroups:
+    - coveredResources: ["cpu", "memory"]
+      flavors:
+        - name: "default-rf"
+          resources:
+            - name: "cpu"
+              nominalQuota: 10000
+            - name: "memory"
+              nominalQuota: 10000Gi
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  name: retry-check-demo
+spec:
+  clusterQueue: retry-check-demo

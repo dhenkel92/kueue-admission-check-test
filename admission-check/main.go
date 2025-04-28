@@ -41,6 +41,9 @@ func (ctrl *RetryAdmissionCheck) Reconcile(ctx context.Context, request reconcil
 		return reconcile.Result{}, nil
 	}
 
+	logger := log.FromContext(ctx)
+	logger.Info("handle workload admission check")
+
 	check := workload.FindAdmissionCheck(wl.Status.AdmissionChecks, checkName)
 	if check == nil || check.State != kueuev1beta1.CheckStatePending {
 		return reconcile.Result{}, nil
@@ -70,12 +73,15 @@ type ACReconciler struct {
 }
 
 func (ctrl *ACReconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	var ac kueuev1beta1.AdmissionCheck
+	logger := log.FromContext(ctx)
 
 	if request.Name != checkName {
 		return reconcile.Result{}, nil
 	}
 
+	logger.Info("set admission check to active")
+
+	var ac kueuev1beta1.AdmissionCheck
 	if err := ctrl.client.Get(ctx, request.NamespacedName, &ac); err != nil {
 		if apierrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -125,6 +131,7 @@ func main() {
 	}
 	_, err = ctrl.NewControllerManagedBy(mgr).
 		For(&kueuev1beta1.Workload{}).
+		Named("WorkloadACController").
 		Build(reconciler)
 	handleError(err)
 
@@ -133,6 +140,7 @@ func main() {
 	}
 	_, err = ctrl.NewControllerManagedBy(mgr).
 		For(&kueuev1beta1.AdmissionCheck{}).
+		Named("ACController").
 		Build(acReconciler)
 	handleError(err)
 
